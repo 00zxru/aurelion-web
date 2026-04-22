@@ -1,0 +1,251 @@
+// Phase 14: Firebase Security Rules
+// Comprehensive security rules for AURELION recognition system
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+    
+    function isSystemAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
+    
+    function isHouseElder(houseId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Elder' &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.house == houseId;
+    }
+    
+    function isHouseMember(houseId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.house == houseId;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidUserData() {
+      return request.resource.data.keys().hasAll(['name', 'email', 'house', 'role']) &&
+             request.resource.data.name is string &&
+             request.resource.data.name.size() > 0 &&
+             request.resource.data.name.size() <= 100 &&
+             request.resource.data.email is string &&
+             request.resource.data.email.matches('.+@.+\\..+') &&
+             request.resource.data.house in ['house1', 'house2', 'house3', 'house4', 'house5'] &&
+             request.resource.data.role in ['Member', 'Elder', 'Admin'];
+    }
+    
+    function isValidWorkData() {
+      return request.resource.data.keys().hasAll(['title', 'creator', 'house', 'category', 'status']) &&
+             request.resource.data.title is string &&
+             request.resource.data.title.size() > 0 &&
+             request.resource.data.title.size() <= 200 &&
+             request.resource.data.creator is string &&
+             request.resource.data.house in ['house1', 'house2', 'house3', 'house4', 'house5'] &&
+             request.resource.data.category in ['Digital', 'Physical', 'Methodology', 'Analysis', 'Innovation'] &&
+             request.resource.data.status in ['draft', 'published', 'archived'];
+    }
+    
+    function isValidRecognitionData() {
+      return request.resource.data.keys().hasAll(['workId', 'recognizerId', 'scores', 'feedback']) &&
+             request.resource.data.workId is string &&
+             request.resource.data.recognizerId is string &&
+             request.resource.data.scores is map &&
+             request.resource.data.scores.keys().hasAll(['precision', 'discipline', 'execution']) &&
+             request.resource.data.feedback is string &&
+             request.resource.data.feedback.size() >= 10 &&
+             request.resource.data.feedback.size() <= 1000;
+    }
+    
+    function isValidScore(score) {
+      return score is int && score >= 0 && score <= 100;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Read rules
+      allow read: if isAuthenticated() && 
+                   (isOwner(userId) || isSystemAdmin() || isHouseElder(get(/databases/$(database)/documents/users/$(userId)).data.house));
+      
+      // Create rules - only system admins can create users initially
+      allow create: if isSystemAdmin() && isValidUserData();
+      
+      // Update rules - users can update their own profile, admins can update anyone
+      allow update: if (isOwner(userId) || isSystemAdmin()) && 
+                    isValidUserData() &&
+                    request.resource.data.keys().hasAll(['name', 'email', 'house', 'role']);
+      
+      // Delete rules - only admins can delete users
+      allow delete: if isSystemAdmin();
+    }
+
+    // Houses collection
+    match /houses/{houseId} {
+      // Read rules - all authenticated users can read house data
+      allow read: if isAuthenticated() && houseId in ['house1', 'house2', 'house3', 'house4', 'house5'];
+      
+      // Update rules - only house elders or system admins can update house data
+      allow update: if (isHouseElder(houseId) || isSystemAdmin()) &&
+                    houseId in ['house1', 'house2', 'house3', 'house4', 'house5'];
+      
+      // Create/Delete - only system admins
+      allow create, delete: if isSystemAdmin() && houseId in ['house1', 'house2', 'house3', 'house4', 'house5'];
+    }
+
+    // Works collection
+    match /works/{workId} {
+      // Read rules - published works are public to all authenticated users
+      allow read: if isAuthenticated() && 
+                   (resource.data.status == 'published' || 
+                    isOwner(resource.data.creator) || 
+                    isHouseMember(resource.data.house) ||
+                    isSystemAdmin());
+      
+      // Create rules - authenticated users can create works
+      allow create: if isAuthenticated() && 
+                    isValidWorkData() &&
+                    isOwner(request.resource.data.creator);
+      
+      // Update rules - creators can update their own works, elders/admins can update works in their house
+      allow update: if (isOwner(resource.data.creator) || 
+                       isHouseElder(resource.data.house) || 
+                       isSystemAdmin()) &&
+                    isValidWorkData();
+      
+      // Delete rules - creators can delete their own works, admins can delete any
+      allow delete: if isOwner(resource.data.creator) || isSystemAdmin();
+    }
+
+    // Recognitions collection
+    match /recognitions/{recognitionId} {
+      // Read rules - users can read recognitions they gave/received, elders/admins can read house recognitions
+      allow read: if isAuthenticated() && 
+                   (isOwner(resource.data.recognizerId) || 
+                    isOwner(resource.data.workCreatorId) ||
+                    isHouseElder(resource.data.workHouseId) ||
+                    isSystemAdmin());
+      
+      // Create rules - authenticated users can create recognitions for works not by themselves
+      allow create: if isAuthenticated() && 
+                    isValidRecognitionData() &&
+                    isOwner(request.resource.data.recognizerId) &&
+                    !isOwner(request.resource.data.workCreatorId) &&
+                    isValidScore(request.resource.data.scores.precision) &&
+                    isValidScore(request.resource.data.scores.discipline) &&
+                    isValidScore(request.resource.data.scores.execution);
+      
+      // Update rules - only admins can update recognitions (for moderation)
+      allow update: if isSystemAdmin() && isValidRecognitionData();
+      
+      // Delete rules - only admins can delete recognitions
+      allow delete: if isSystemAdmin();
+    }
+
+    // Activities collection
+    match /activities/{activityId} {
+      // Read rules - users can read activities related to them or their house, admins can read all
+      allow read: if isAuthenticated() && 
+                   (isOwner(resource.data.userId) || 
+                    isHouseMember(resource.data.houseId) ||
+                    isSystemAdmin());
+      
+      // Create rules - system can create activities, users can create certain types
+      allow create: if isAuthenticated() && 
+                    request.resource.data.keys().hasAll(['type', 'description', 'timestamp']) &&
+                    request.resource.data.type in ['work_submission', 'recognition_given', 'collaboration_started'] &&
+                    isOwner(request.resource.data.userId);
+      
+      // Update/Delete - only system admins
+      allow update, delete: if isSystemAdmin();
+    }
+
+    // Issues collection
+    match /issues/{issueId} {
+      // Read rules - users can read their own issues, admins can read all
+      allow read: if isAuthenticated() && 
+                   (isOwner(resource.data.reportedBy) || isSystemAdmin());
+      
+      // Create rules - authenticated users can create issues
+      allow create: if isAuthenticated() && 
+                    request.resource.data.keys().hasAll(['title', 'description', 'severity', 'reportedBy']) &&
+                    request.resource.data.title is string &&
+                    request.resource.data.title.size() > 0 &&
+                    request.resource.data.title.size() <= 200 &&
+                    request.resource.data.description is string &&
+                    request.resource.data.description.size() > 10 &&
+                    request.resource.data.description.size() <= 2000 &&
+                    request.resource.data.severity in ['low', 'medium', 'high', 'critical'] &&
+                    isOwner(request.resource.data.reportedBy);
+      
+      // Update rules - users can update their own issues, admins can update any
+      allow update: if (isOwner(resource.data.reportedBy) || isSystemAdmin()) &&
+                    request.resource.data.keys().hasAll(['title', 'description', 'severity', 'reportedBy']);
+      
+      // Delete rules - only admins or issue creators
+      allow delete: if isOwner(resource.data.reportedBy) || isSystemAdmin();
+    }
+
+    // Contact collection
+    match /contact/{contactId} {
+      // Read rules - only system admins can read contact submissions
+      allow read: if isSystemAdmin();
+      
+      // Create rules - anyone can submit contact forms (including unauthenticated)
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'department', 'subject', 'message']) &&
+                    request.resource.data.name is string &&
+                    request.resource.data.name.size() > 0 &&
+                    request.resource.data.name.size() <= 100 &&
+                    request.resource.data.email is string &&
+                    request.resource.data.email.matches('.+@.+\\..+') &&
+                    request.resource.data.department in ['general', 'technical', 'recognition', 'houses', 'partnerships'] &&
+                    request.resource.data.subject is string &&
+                    request.resource.data.subject.size() > 0 &&
+                    request.resource.data.subject.size() <= 200 &&
+                    request.resource.data.message is string &&
+                    request.resource.data.message.size() > 10 &&
+                    request.resource.data.message.size() <= 2000;
+      
+      // Update/Delete - only admins
+      allow update, delete: if isSystemAdmin();
+    }
+
+    // System statistics collection (read-only for most users)
+    match /system/{statId} {
+      // Read rules - all authenticated users can read system stats
+      allow read: if isAuthenticated();
+      
+      // Write rules - only system admins can update system statistics
+      allow write: if isSystemAdmin();
+    }
+
+    // Profiles collection (extended user profiles)
+    match /profiles/{profileId} {
+      // Read rules - users can read public profiles, own full profile, elders/admins can read house profiles
+      allow read: if isAuthenticated() && 
+                   (isOwner(profileId) || 
+                    resource.data.privacy == 'public' ||
+                    isHouseElder(resource.data.houseId) ||
+                    isSystemAdmin());
+      
+      // Create rules - users can create their own profile
+      allow create: if isAuthenticated() && isOwner(profileId);
+      
+      // Update rules - users can update their own profile
+      allow update: if isOwner(profileId) || isSystemAdmin();
+      
+      // Delete rules - users can delete their own profile, admins can delete any
+      allow delete: if isOwner(profileId) || isSystemAdmin();
+    }
+
+    // Deny all other reads/writes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

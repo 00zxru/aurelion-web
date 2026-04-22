@@ -56,11 +56,250 @@ class AurelionApp {
         this.initializeScrollProgress();
         this.loadUserSession();
         this.setupEventListeners();
+        this.initializeWordmark();
+        this.initializeScrollNavigation();
+        this.initializeIntroAnimation();
+        this.initializeLandingMotion();
+        this.initializeHouseSystem();
+        this.initializeProfileSystem();
+        this.initializeRecognitionSystem();
+        this.initializeActivitySystem();
+        this.initializeWorkSystem();
+        this.initializeAdminSystem();
+        this.initializeContactSystem();
+        this.initializeAccessibilitySystem();
+        this.initializeBrandVoiceSystem();
+        this.initializeStretchGoalsSystem();
         
         // Start with entry screen
         setTimeout(() => {
             this.showView('access');
         }, 2000);
+    }
+
+    initializeIntroAnimation() {
+        // Start intro animation if it should play
+        setTimeout(() => {
+            if (typeof IntroAnimation !== 'undefined') {
+                IntroAnimation.start();
+            }
+        }, 500);
+    }
+
+    initializeLandingMotion() {
+        // Initialize exaggerated landing motion for hero
+        setTimeout(() => {
+            if (typeof LandingMotion !== 'undefined') {
+                this.landingMotion = LandingMotion.init();
+            }
+        }, 1000);
+    }
+
+    initializeHouseSystem() {
+        // Initialize full house system
+        setTimeout(() => {
+            if (typeof HouseSystem !== 'undefined') {
+                this.houseSystem = HouseSystem.init();
+                window.houseSystem = this.houseSystem; // Global access for navigation
+            }
+        }, 1500);
+    }
+
+    initializeProfileSystem() {
+        // Initialize profile system
+        setTimeout(() => {
+            if (typeof ProfileSystem !== 'undefined') {
+                this.profileSystem = ProfileSystem.init();
+                window.profileSystem = this.profileSystem; // Global access for navigation
+            }
+        }, 2000);
+    }
+
+    initializeRecognitionSystem() {
+        // Initialize recognition system
+        setTimeout(() => {
+            if (typeof RecognitionSystem !== 'undefined') {
+                this.recognitionSystem = RecognitionSystem.init();
+                window.recognitionSystem = this.recognitionSystem; // Global access for navigation
+            }
+        }, 2500);
+    }
+
+    initializeActivitySystem() {
+        // Initialize activity system
+        setTimeout(() => {
+            if (typeof ActivitySystem !== 'undefined') {
+                this.activitySystem = ActivitySystem.init();
+                window.activitySystem = this.activitySystem; // Global access for navigation
+            }
+        }, 3000);
+    }
+
+    initializeWorkSystem() {
+        // Initialize work system
+        setTimeout(() => {
+            if (typeof WorkSystem !== 'undefined') {
+                this.workSystem = WorkSystem.init();
+                window.workSystem = this.workSystem; // Global access for navigation
+            }
+        }, 3500);
+    }
+
+    initializeAdminSystem() {
+        // Initialize admin system
+        setTimeout(() => {
+            if (typeof AdminSystem !== 'undefined') {
+                this.adminSystem = AdminSystem.init();
+                window.adminSystem = this.adminSystem; // Global access for navigation
+            }
+        }, 4000);
+    }
+
+    initializeContactSystem() {
+        // Initialize contact system
+        setTimeout(() => {
+            if (typeof ContactSystem !== 'undefined') {
+                this.contactSystem = ContactSystem.init();
+                window.contactSystem = this.contactSystem; // Global access for navigation
+            }
+        }, 4500);
+    }
+
+    initializeAccessibilitySystem() {
+        // Initialize accessibility system
+        setTimeout(() => {
+            if (typeof AccessibilitySystem !== 'undefined') {
+                this.accessibilitySystem = AccessibilitySystem.init();
+                window.accessibilitySystem = this.accessibilitySystem; // Global access for navigation
+            }
+        }, 5000);
+    }
+
+    initializeBrandVoiceSystem() {
+        // Initialize brand voice system
+        setTimeout(() => {
+            if (typeof BrandVoiceSystem !== 'undefined') {
+                this.brandVoiceSystem = BrandVoiceSystem.init();
+                window.brandVoiceSystem = this.brandVoiceSystem; // Global access for navigation
+            }
+        }, 5500);
+    }
+
+    initializeStretchGoalsSystem() {
+        // Initialize stretch goals system
+        setTimeout(() => {
+            if (typeof StretchGoalsSystem !== 'undefined') {
+                this.stretchGoalsSystem = StretchGoalsSystem.init();
+                window.stretchGoalsSystem = this.stretchGoalsSystem; // Global access for navigation
+            }
+        }, 6000);
+    }
+
+    initializeWordmark() {
+        // Replace all logo elements with AurelionWordmark
+        setTimeout(() => {
+            if (typeof AurelionWordmark !== 'undefined') {
+                AurelionWordmark.replace('.logo', { size: 'medium', color: 'gold' });
+                AurelionWordmark.replace('.page-title', { size: 'large', color: 'gold', animation: true });
+            }
+        }, 100);
+    }
+
+    initializeScrollNavigation() {
+        // Add section IDs for scroll navigation
+        this.addSectionIds();
+        
+        // Initialize scrollspy
+        this.initializeScrollSpy();
+        
+        // Add smooth scroll behavior to navigation links
+        this.addSmoothScroll();
+    }
+
+    addSectionIds() {
+        // Add stable IDs to major sections
+        const sections = [
+            { selector: '.hero', id: 'hero' },
+            { selector: '.houses-grid', id: 'houses' },
+            { selector: '.work-grid', id: 'work' },
+            { selector: '.members-grid', id: 'members' },
+            { selector: '.admin-container', id: 'admin' }
+        ];
+
+        sections.forEach(section => {
+            const element = document.querySelector(section.selector);
+            if (element && !element.id) {
+                element.id = section.id;
+            }
+        });
+    }
+
+    initializeScrollSpy() {
+        const sections = document.querySelectorAll('[id]');
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        if (!sections.length || !navItems.length) return;
+
+        const observerOptions = {
+            root: document.querySelector('.main-content'),
+            rootMargin: '-40% 0px -60% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.id;
+                    this.updateActiveNavItem(sectionId);
+                    
+                    // Update URL hash silently
+                    if (history.replaceState) {
+                        history.replaceState(null, null, `#${sectionId}`);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => observer.observe(section));
+    }
+
+    updateActiveNavItem(sectionId) {
+        const navItems = document.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            item.classList.remove('active');
+            
+            const href = item.getAttribute('href') || item.getAttribute('onclick');
+            if (href && href.includes(sectionId)) {
+                item.classList.add('active');
+            }
+        });
+    }
+
+    addSmoothScroll() {
+        const navLinks = document.querySelectorAll('.nav-item[href], .mobile-nav-item[href]');
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                const href = link.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        const offset = 200; // Account for sidebar width
+                        const targetPosition = targetElement.offsetTop - offset;
+                        
+                        document.querySelector('.main-content').scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
     }
 
     // View Management

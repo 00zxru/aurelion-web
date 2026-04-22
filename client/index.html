@@ -22,6 +22,20 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
     <!-- Star Field -->
     <div class="star-field" id="starField"></div>
 
@@ -60,36 +74,36 @@
             <nav class="desktop-nav" id="desktopNav">
                 <div class="nav-header">
                     <div class="logo">AURELION</div>
-                    <div class="nav-status">Recognition confirmed</div>
+                    <div class="nav-status">Observed</div>
                 </div>
                 <div class="nav-menu">
                     <button class="nav-item" data-view="home" onclick="navigateTo('home')">
                         <span class="nav-icon">§</span>
-                        <span class="nav-label">Home</span>
+                        <span class="nav-label">Observation</span>
                     </button>
                     <button class="nav-item" data-view="houses" onclick="navigateTo('houses')">
                         <span class="nav-icon">«</span>
-                        <span class="nav-label">Houses</span>
+                        <span class="nav-label">Entities</span>
                     </button>
                     <button class="nav-item" data-view="profile" onclick="navigateTo('profile')">
                         <span class="nav-icon">°</span>
-                        <span class="nav-label">Profile</span>
+                        <span class="nav-label">Record</span>
                     </button>
                     <button class="nav-item" data-view="admin" onclick="navigateTo('admin')">
                         <span class="nav-icon">»</span>
-                        <span class="nav-label">Admin</span>
+                        <span class="nav-label">Archive</span>
                     </button>
                 </div>
                 <div class="nav-footer">
                     <div class="settings-dropdown" id="settingsDropdown">
                         <button class="settings-button" onclick="toggleSettings()">
-                            <span>Settings & Activity</span>
+                            <span>Operations</span>
                             <span class="dropdown-arrow">v</span>
                         </button>
                         <div class="settings-menu" id="settingsMenu">
-                            <a href="#" class="settings-item" onclick="navigateTo('profile')">Profile</a>
-                            <a href="#" class="settings-item" onclick="navigateTo('admin')">Media Management</a>
-                            <a href="#" class="settings-item" onclick="logout()">Logout</a>
+                            <a href="#" class="settings-item" onclick="navigateTo('profile')">Record</a>
+                            <a href="#" class="settings-item" onclick="navigateTo('admin')">Archive</a>
+                            <a href="#" class="settings-item" onclick="logout()">Depart</a>
                         </div>
                     </div>
                 </div>
@@ -99,19 +113,19 @@
             <nav class="mobile-nav" id="mobileNav">
                 <button class="mobile-nav-item" data-view="home" onclick="navigateTo('home')">
                     <span class="mobile-nav-icon">§</span>
-                    <span class="mobile-nav-label">Home</span>
+                    <span class="mobile-nav-label">Observe</span>
                 </button>
                 <button class="mobile-nav-item" data-view="houses" onclick="navigateTo('houses')">
                     <span class="mobile-nav-icon">«</span>
-                    <span class="mobile-nav-label">Houses</span>
+                    <span class="mobile-nav-label">Entities</span>
                 </button>
                 <button class="mobile-nav-item" data-view="profile" onclick="navigateTo('profile')">
                     <span class="mobile-nav-icon">°</span>
-                    <span class="mobile-nav-label">Profile</span>
+                    <span class="mobile-nav-label">Record</span>
                 </button>
                 <button class="mobile-nav-item" data-view="admin" onclick="navigateTo('admin')">
                     <span class="mobile-nav-icon">»</span>
-                    <span class="mobile-nav-label">Admin</span>
+                    <span class="mobile-nav-label">Archive</span>
                 </button>
             </nav>
 
@@ -122,43 +136,12 @@
                 <div class="content-view" id="homeView">
                     <section class="hero">
                         <div class="hero-content">
-                            <div class="hero-wordmark">
-                                <div class="solar-halo-svg" id="solarHalo">
-                                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                                        <!-- Central glow -->
-                                        <defs>
-                                            <radialGradient id="centralGlow">
-                                                <stop offset="0%" stop-color="#f4e4c1" stop-opacity="0.8"/>
-                                                <stop offset="50%" stop-color="#d4a574" stop-opacity="0.4"/>
-                                                <stop offset="100%" stop-color="#d4a574" stop-opacity="0"/>
-                                            </radialGradient>
-                                        </defs>
-                                        <circle cx="100" cy="100" r="15" fill="url(#centralGlow)" class="central-orb"/>
-                                        <!-- Primary rays -->
-                                        <line x1="100" y1="100" x2="100" y2="20" stroke="#d4a574" stroke-width="3" opacity="0.7" class="ray-primary"/>
-                                        <line x1="100" y1="100" x2="100" y2="180" stroke="#d4a574" stroke-width="3" opacity="0.7" class="ray-primary"/>
-                                        <line x1="100" y1="100" x2="20" y2="100" stroke="#d4a574" stroke-width="3" opacity="0.7" class="ray-primary"/>
-                                        <line x1="100" y1="100" x2="180" y2="100" stroke="#d4a574" stroke-width="3" opacity="0.7" class="ray-primary"/>
-                                        <!-- Diagonal rays -->
-                                        <line x1="100" y1="100" x2="141" y2="59" stroke="#d4a574" stroke-width="2" opacity="0.5" class="ray-secondary"/>
-                                        <line x1="100" y1="100" x2="59" y2="141" stroke="#d4a574" stroke-width="2" opacity="0.5" class="ray-secondary"/>
-                                        <line x1="100" y1="100" x2="141" y2="141" stroke="#d4a574" stroke-width="2" opacity="0.5" class="ray-secondary"/>
-                                        <line x1="100" y1="100" x2="59" y2="59" stroke="#d4a574" stroke-width="2" opacity="0.5" class="ray-secondary"/>
-                                        <!-- Tertiary rays -->
-                                        <line x1="100" y1="100" x2="125" y2="35" stroke="#d4a574" stroke-width="1.5" opacity="0.3" class="ray-tertiary"/>
-                                        <line x1="100" y1="100" x2="165" y2="75" stroke="#d4a574" stroke-width="1.5" opacity="0.3" class="ray-tertiary"/>
-                                        <line x1="100" y1="100" x2="165" y2="125" stroke="#d4a574" stroke-width="1.5" opacity="0.3" class="ray-tertiary"/>
-                                        <line x1="100" y1="100" x2="125" y2="165" stroke="#d4a574" stroke-width="1.5" opacity="0.3" class="ray-tertiary"/>
-                                        <line x1="100" y1="100" x2="75" y2="165" stroke="#d4a574" stroke-width="1.5" opacity="0.3" class="ray-tertiary"/>
-                                        <line x1="100" y1="100" x2="35" y2="125" stroke="#d4a574" stroke-width="1.5" opacity="0.3" class="ray-tertiary"/>
-                                        <line x1="100" y1="100" x2="35" y2="75" stroke="#d4a574" stroke-width="1.5" opacity="0.3" class="ray-tertiary"/>
-                                        <line x1="100" y1="100" x2="75" y2="35" stroke="#d4a574" stroke-width="1.5" opacity="0.3" class="ray-tertiary"/>
-                                    </svg>
-                                </div>
+                            <div class="hero-wordmark logo">
                                 AURELION
+                                <div class="solar-crest"></div>
                             </div>
                             <p class="hero-tagline">AURELION observes.</p>
-                            <p class="hero-subtitle">A selective creative entity that recognizes based on precision, discipline, and execution.</p>
+                            <p class="hero-subtitle">Precision. Discipline. Execution.</p>
                         </div>
                     </section>
                 </div>
@@ -166,8 +149,8 @@
                 <!-- Houses View -->
                 <div class="content-view" id="housesView">
                     <div class="view-header">
-                        <h2 class="view-title">Houses</h2>
-                        <p class="view-subtitle">Five distinct entities of observation</p>
+                        <h2 class="view-title">Entities</h2>
+                        <p class="view-subtitle">Five observed collectives</p>
                     </div>
                     <div class="houses-grid" id="housesGrid">
                         <!-- Houses will be loaded dynamically -->
@@ -216,12 +199,26 @@
     <!-- Profile Completion Banner -->
     <div class="profile-banner" id="profileBanner">
         <div class="banner-content">
-            <span>Complete your profile to unlock full recognition</span>
-            <button class="banner-button" onclick="navigateTo('profile')">Complete Profile</button>
+            <span>Record incomplete. Recognition pending.</span>
+            <button class="banner-button" onclick="navigateTo('profile')">Complete Record</button>
         </div>
         <button class="banner-close" onclick="closeProfileBanner()">×</button>
     </div>
 
+    <script src="components/AurelionWordmark.js"></script>
+    <script src="components/SolarCrest.js"></script>
+    <script src="components/IntroAnimation.js"></script>
+    <script src="components/LandingMotion.js"></script>
+    <script src="components/HouseSystem.js"></script>
+    <script src="components/ProfileSystem.js"></script>
+    <script src="components/RecognitionSystem.js"></script>
+    <script src="components/ActivitySystem.js"></script>
+    <script src="components/WorkSystem.js"></script>
+    <script src="components/AdminSystem.js"></script>
+    <script src="components/ContactSystem.js"></script>
+    <script src="components/AccessibilitySystem.js"></script>
+    <script src="components/BrandVoiceSystem.js"></script>
+    <script src="components/StretchGoalsSystem.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
