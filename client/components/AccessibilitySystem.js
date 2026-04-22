@@ -463,12 +463,27 @@ class AccessibilitySystem {
 
         document.body.appendChild(errorDiv);
 
-        // Auto-remove after 10 seconds
+        // Auto-remove after 8 seconds
         setTimeout(() => {
-            if (errorDiv.parentElement) {
+            errorDiv.remove();
+        }, 8000);
+        
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
                 errorDiv.remove();
+                document.removeEventListener('keydown', handleEscape);
             }
-        }, 10000);
+        };
+        document.addEventListener('keydown', handleEscape);
+        
+        // Close on background click
+        errorDiv.addEventListener('click', (e) => {
+            if (e.target === errorDiv) {
+                errorDiv.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        });
     }
 
     // Log error to service

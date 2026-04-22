@@ -776,13 +776,16 @@ h6 { font-size: var(--text-base); letter-spacing: var(--tracking-normal); }
     width: 120px;
     height: 120px;
     margin: 0 auto 2rem;
-    background: var(--matte-gold-20);
+    background: var(--color-glass-bg);
+    border: 2px solid var(--color-glass-border);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 3rem;
-    color: var(--matte-gold);
+    color: var(--color-gold);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .house-detail-name {
@@ -831,22 +834,25 @@ h6 { font-size: var(--text-base); letter-spacing: var(--tracking-normal); }
 }
 
 .member-card:hover {
-    border-color: var(--matte-gold-40);
-    transform: translateY(-4px);
-    box-shadow: 0 12px 25px rgba(212, 165, 116, 0.15), 0 0 0 1px rgba(201, 168, 76, 0.08) inset;
+    border-color: var(--color-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(201, 168, 76, 0.12), 0 0 0 1px rgba(201, 168, 76, 0.06) inset;
 }
 
 .member-avatar {
     width: 60px;
     height: 60px;
     margin: 0 auto 1rem;
-    background: var(--matte-gold-20);
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--matte-gold);
+    color: var(--color-gold);
     font-size: 1.5rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .member-name {
@@ -878,9 +884,9 @@ h6 { font-size: var(--text-base); letter-spacing: var(--tracking-normal); }
 }
 
 .work-item:hover {
-    transform: scale(1.05) translateY(-4px);
-    border-color: var(--matte-gold-40);
-    box-shadow: 0 15px 30px rgba(212, 165, 116, 0.2), 0 0 0 1px rgba(201, 168, 76, 0.1) inset;
+    transform: translateY(-4px) scale(1.02);
+    border-color: var(--color-gold);
+    box-shadow: 0 8px 16px rgba(201, 168, 76, 0.15), 0 0 0 1px rgba(201, 168, 76, 0.08) inset;
 }
 
 .work-placeholder {
@@ -889,7 +895,7 @@ h6 { font-size: var(--text-base); letter-spacing: var(--tracking-normal); }
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--deep-black-50) 0%, var(--matte-gold-10) 100%);
+    background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--matte-gold-10) 100%);
 }
 
 .work-placeholder-content {

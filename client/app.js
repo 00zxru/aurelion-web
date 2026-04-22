@@ -342,6 +342,31 @@ class AurelionApp {
                 this.showContentView('adminView');
                 this.loadAdmin();
                 break;
+            case 'recognition':
+                this.showMainApp();
+                this.showContentView('recognitionView');
+                this.loadRecognition();
+                break;
+            case 'activity':
+                this.showMainApp();
+                this.showContentView('activityView');
+                this.loadActivity();
+                break;
+            case 'work':
+                this.showMainApp();
+                this.showContentView('workView');
+                this.loadWork();
+                break;
+            case 'contact':
+                this.showMainApp();
+                this.showContentView('contactView');
+                this.loadContact();
+                break;
+            case 'stretchGoals':
+                this.showMainApp();
+                this.showContentView('stretchGoalsView');
+                this.loadStretchGoals();
+                break;
         }
         
         this.currentView = viewName;
@@ -392,26 +417,60 @@ class AurelionApp {
 
     // Access Portal
     validateAccess() {
-        const code = document.getElementById('accessCode').value.toUpperCase();
+        const code = document.getElementById('accessCode').value.toUpperCase().trim();
         const errorMessage = document.getElementById('errorMessage');
         const button = document.getElementById('accessButton');
         
-        if (code === 'AURELION2024') {
-            button.disabled = true;
-            button.innerHTML = '<span class="loading"></span>';
-            
-            // Simulate authentication
-            setTimeout(() => {
-                this.currentUser = { id: 'user-1', name: 'UNREVEALED', house: 'solis' };
-                this.saveUserSession();
-                this.navigateTo('home');
-            }, 1500);
-        } else {
+        // Clear previous error state
+        errorMessage.classList.remove('show');
+        button.disabled = false;
+        button.innerHTML = 'Proceed';
+        
+        // Validate code format (basic validation)
+        if (!code) {
+            errorMessage.textContent = 'Please enter an access code';
             errorMessage.classList.add('show');
-            setTimeout(() => {
-                errorMessage.classList.remove('show');
-            }, 3000);
+            return;
         }
+        
+        if (code.length < 4) {
+            errorMessage.textContent = 'Access code must be at least 4 characters';
+            errorMessage.classList.add('show');
+            return;
+        }
+        
+        // Accept any valid format code (remove hardcoded requirement)
+        button.disabled = true;
+        button.innerHTML = '<span class="loading"></span>';
+        
+        // Simulate authentication
+        setTimeout(() => {
+            // Generate user based on code pattern
+            const userHouse = this.determineHouseFromCode(code);
+            this.currentUser = { 
+                id: 'user-' + Date.now(), 
+                name: 'Observer', 
+                house: userHouse,
+                accessCode: code
+            };
+            this.saveUserSession();
+            this.navigateTo('home');
+        }, 1500);
+    }
+    
+    // Determine house from access code pattern
+    determineHouseFromCode(code) {
+        const houseMap = {
+            '1': 'house1',
+            '2': 'house2', 
+            '3': 'house3',
+            '4': 'house4',
+            '5': 'house5'
+        };
+        
+        // Extract first digit or use default
+        const firstChar = code.charAt(0);
+        return houseMap[firstChar] || 'house1';
     }
 
     // Houses
@@ -833,10 +892,18 @@ class AurelionApp {
     }
 
     closeModal() {
-        const modal = document.getElementById('modal');
-        if (modal) {
+        // Close all modals and overlays
+        const modals = document.querySelectorAll('.modal.active, .dialog.active, .guidelines-box, .suggestion-box, .compliance-result, .accessibility-panel, .brand-tooltip, .writing-assistance');
+        modals.forEach(modal => {
             modal.classList.remove('active');
-        }
+            modal.remove();
+        });
+        
+        // Clean up any remaining overlays
+        const overlays = document.querySelectorAll('[aria-hidden="false"]');
+        overlays.forEach(overlay => {
+            overlay.setAttribute('aria-hidden', 'true');
+        });
     }
 
     // Profile Banner
@@ -875,6 +942,150 @@ class AurelionApp {
         if (dropdown) {
             dropdown.classList.toggle('open');
         }
+    }
+
+    // Load functions for all systems
+    async loadRecognition() {
+        const recognitionContainer = document.getElementById('recognitionContainer');
+        if (!recognitionContainer) return;
+        
+        recognitionContainer.innerHTML = `
+            <div class="recognition-header">
+                <h2 class="view-title">Recognition System</h2>
+                <p class="view-subtitle">Peer recognition for precision, discipline, execution</p>
+            </div>
+            <div class="recognition-form">
+                <div class="form-group">
+                    <label class="form-label">Select Member</label>
+                    <select class="form-input" id="recognitionMember">
+                        <option value="">Choose member to recognize</option>
+                        <!-- Mock members would be loaded here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Precision Score (40%)</label>
+                    <input type="range" class="form-input" id="precisionScore" min="0" max="100" value="80">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discipline Score (30%)</label>
+                    <input type="range" class="form-input" id="disciplineScore" min="0" max="100" value="75">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Execution Score (30%)</label>
+                    <input type="range" class="form-input" id="executionScore" min="0" max="100" value="85">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Feedback</label>
+                    <textarea class="form-input" id="recognitionFeedback" rows="4" placeholder="Provide specific feedback..."></textarea>
+                </div>
+                <button class="form-button" onclick="app.submitRecognition()">Submit Recognition</button>
+            </div>
+        `;
+    }
+
+    async loadActivity() {
+        const activityContainer = document.getElementById('activityContainer');
+        if (!activityContainer) return;
+        
+        activityContainer.innerHTML = `
+            <div class="activity-header">
+                <h2 class="view-title">Activity Feed</h2>
+                <p class="view-subtitle">Real-time system activity and updates</p>
+            </div>
+            <div class="activity-filters">
+                <button class="filter-button active" onclick="app.filterActivity('all')">All</button>
+                <button class="filter-button" onclick="app.filterActivity('recognition')">Recognitions</button>
+                <button class="filter-button" onclick="app.filterActivity('work')">Work</button>
+                <button class="filter-button" onclick="app.filterActivity('profile')">Profiles</button>
+            </div>
+            <div class="activity-feed" id="activityFeed">
+                <!-- Activity items would be loaded here -->
+            </div>
+        `;
+        
+        this.loadActivityFeed('all');
+    }
+
+    async loadWork() {
+        const workContainer = document.getElementById('workContainer');
+        if (!workContainer) return;
+        
+        workContainer.innerHTML = `
+            <div class="work-header">
+                <h2 class="view-title">Work Portfolio</h2>
+                <p class="view-subtitle">Submit and manage observational works</p>
+            </div>
+            <div class="work-actions">
+                <button class="form-button" onclick="app.showWorkSubmission()">Submit New Work</button>
+                <button class="form-button secondary" onclick="app.showWorkGallery()">View Gallery</button>
+            </div>
+            <div class="work-content" id="workContent">
+                <!-- Work content will be loaded here -->
+            </div>
+        `;
+        
+        this.showWorkGallery();
+    }
+
+    async loadContact() {
+        const contactContainer = document.getElementById('contactContainer');
+        if (!contactContainer) return;
+        
+        contactContainer.innerHTML = `
+            <div class="contact-header">
+                <h2 class="view-title">Contact System</h2>
+                <p class="view-subtitle">Professional communication and inquiry management</p>
+            </div>
+            <div class="contact-form">
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    <select class="form-input" id="contactDepartment">
+                        <option value="">Select department</option>
+                        <option value="general">General Inquiry</option>
+                        <option value="technical">Technical Support</option>
+                        <option value="recognition">Recognition Issues</option>
+                        <option value="partnership">Partnership</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Subject</label>
+                    <input type="text" class="form-input" id="contactSubject" placeholder="Brief subject line">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-input" id="contactMessage" rows="6" placeholder="Detailed message..."></textarea>
+                </div>
+                <button class="form-button" onclick="app.submitContact()">Send Message</button>
+            </div>
+            <div class="contact-history" id="contactHistory">
+                <!-- Contact history would be loaded here -->
+            </div>
+        `;
+        
+        this.loadContactHistory();
+    }
+
+    async loadStretchGoals() {
+        const stretchGoalsContainer = document.getElementById('stretchGoalsContainer');
+        if (!stretchGoalsContainer) return;
+        
+        stretchGoalsContainer.innerHTML = `
+            <div class="stretch-goals-header">
+                <h2 class="view-title">Advanced Features</h2>
+                <p class="view-subtitle">Directory, invitations, analytics, and premium features</p>
+            </div>
+            <div class="stretch-tabs">
+                <button class="tab-button active" onclick="app.switchStretchTab('directory')">Directory</button>
+                <button class="tab-button" onclick="app.switchStretchTab('invitations')">Invitations</button>
+                <button class="tab-button" onclick="app.switchStretchTab('analytics')">Analytics</button>
+                <button class="tab-button" onclick="app.switchStretchTab('premium')">Premium</button>
+            </div>
+            <div class="stretch-content" id="stretchContent">
+                <!-- Stretch goals content will be loaded here -->
+            </div>
+        `;
+        
+        this.switchStretchTab('directory');
     }
 
     logout() {

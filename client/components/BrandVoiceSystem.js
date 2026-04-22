@@ -724,12 +724,18 @@ class BrandVoiceSystem {
     // Suggest improvement
     suggestImprovement() {
         const selection = window.getSelection();
-        if (selection.toString()) {
+        if (selection && selection.toString().trim()) {
             const suggestion = this.generateSuggestion(selection.toString());
             
             if (suggestion) {
                 this.showSuggestion(selection, suggestion);
+            } else {
+                // Show no suggestion message
+                this.showComplianceResult('No specific suggestions available for selected text');
             }
+        } else {
+            // Show message to select text first
+            this.showComplianceResult('Please select some text to get suggestions');
         }
     }
 
@@ -753,6 +759,12 @@ class BrandVoiceSystem {
 
     // Show suggestion
     showSuggestion(selection, suggestion) {
+        // Remove existing suggestion box
+        const existingBox = document.querySelector('.suggestion-box');
+        if (existingBox) {
+            existingBox.remove();
+        }
+        
         const suggestionBox = document.createElement('div');
         suggestionBox.className = 'suggestion-box';
         suggestionBox.innerHTML = `
@@ -760,8 +772,8 @@ class BrandVoiceSystem {
                 <h4>Suggestion</h4>
                 <p>${suggestion}</p>
                 <div class="suggestion-actions">
-                    <button onclick="this.parentElement.parentElement.parentElement.remove()">Dismiss</button>
-                    <button onclick="brandVoiceSystem.applySuggestion('${suggestion}')">Apply</button>
+                    <button class="dismiss-button" onclick="this.closest('.suggestion-box').remove()">Dismiss</button>
+                    <button class="apply-button" onclick="brandVoiceSystem.applySuggestion('${suggestion}')">Apply</button>
                 </div>
             </div>
         `;
@@ -773,6 +785,23 @@ class BrandVoiceSystem {
         const rect = range.getBoundingClientRect();
         suggestionBox.style.left = rect.left + 'px';
         suggestionBox.style.top = (rect.bottom + 10) + 'px';
+        
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                suggestionBox.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        
+        // Close on background click
+        suggestionBox.addEventListener('click', (e) => {
+            if (e.target === suggestionBox) {
+                suggestionBox.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        });
     }
 
     // Apply suggestion
@@ -795,24 +824,54 @@ class BrandVoiceSystem {
 
     // Show compliance result
     showComplianceResult(message) {
+        // Remove existing result box
+        const existingBox = document.querySelector('.compliance-result');
+        if (existingBox) {
+            existingBox.remove();
+        }
+        
         const resultBox = document.createElement('div');
         resultBox.className = 'compliance-result';
         resultBox.innerHTML = `
             <div class="result-content">
                 <p>${message}</p>
-                <button onclick="this.parentElement.parentElement.remove()">Close</button>
+                <button class="close-button" onclick="this.closest('.compliance-result').remove()">Close</button>
             </div>
         `;
         
         document.body.appendChild(resultBox);
         
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                resultBox.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        
+        // Close on background click
+        resultBox.addEventListener('click', (e) => {
+            if (e.target === resultBox) {
+                resultBox.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        });
+        
         setTimeout(() => {
             resultBox.remove();
+            document.removeEventListener('keydown', handleEscape);
         }, 5000);
     }
 
     // Get brand guidelines
     getBrandGuidelines() {
+        // Remove existing guidelines box if present
+        const existingBox = document.querySelector('.guidelines-box');
+        if (existingBox) {
+            existingBox.remove();
+        }
+        
         const guidelinesBox = document.createElement('div');
         guidelinesBox.className = 'guidelines-box';
         guidelinesBox.innerHTML = `
@@ -844,11 +903,31 @@ class BrandVoiceSystem {
                         ${this.brandGuidelines.vocabulary.avoided.map(word => `<li>${word}</li>`).join('')}
                     </ul>
                 </div>
-                <button onclick="this.parentElement.parentElement.remove()">Close</button>
+                <button class="close-button" onclick="this.closest('.guidelines-box').remove()">Close</button>
             </div>
         `;
         
         document.body.appendChild(guidelinesBox);
+        
+        // Focus management
+        guidelinesBox.focus();
+        
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                guidelinesBox.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        
+        // Close on background click
+        guidelinesBox.addEventListener('click', (e) => {
+            if (e.target === guidelinesBox) {
+                guidelinesBox.remove();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        });
     }
 
     // Add brand shortcuts
